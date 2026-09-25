@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verbos como GUSTAR | Servicio comunitario</title>
+<style>
+  :root{
+    --navy:#0b1f3a;
+    --navy2:#15345f;
+    --orange:#f28c28;
+    --yellow:#ffd85a;
+    --cream:#fff8e6;
+    --white:#ffffff;
+    --muted:#cbd6e6;
+    --green:#8fd694;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background:
+      radial-gradient(circle at top right, rgba(242,140,40,.18), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(255,216,90,.10), transparent 30%),
+      var(--navy);
+    color:var(--white);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:24px;
+  }
+
+  .app{
+    width:min(1120px, 96vw);
+    min-height:88vh;
+    background:linear-gradient(180deg, rgba(21,52,95,.96), rgba(11,31,58,.98));
+    border:3px solid var(--orange);
+    border-radius:28px;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+
+  header{
+    padding:26px 34px 22px;
+    background:linear-gradient(90deg, var(--navy), var(--navy2));
+    border-bottom:4px solid var(--yellow);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+
+  .title h1{
+    margin:0;
+    font-size:clamp(2rem, 4vw, 3.4rem);
+    line-height:1;
+    letter-spacing:.5px;
+  }
+
+  .title p{
+    margin:10px 0 0;
+    color:var(--muted);
+    font-size:clamp(1rem, 1.6vw, 1.25rem);
+  }
+
+  .badge{
+    background:var(--yellow);
+    color:var(--navy);
+    font-weight:800;
+    padding:10px 16px;
+    border-radius:999px;
+    font-size:1rem;
+    white-space:nowrap;
+  }
+
+  main{
+    padding:32px;
+    display:grid;
+    grid-template-columns:1.45fr .75fr;
+    gap:28px;
+  }
+
+  .card{
+    background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:24px;
+    padding:28px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .label{
+    color:var(--yellow);
+    text-transform:uppercase;
+    font-weight:900;
+    letter-spacing:1.4px;
+    font-size:.9rem;
+    margin-bottom:12px;
+  }
+
+  #prompt{
+    font-size:clamp(2rem, 4vw, 3.8rem);
+    line-height:1.16;
+    font-weight:850;
+    margin:8px 0 20px;
+  }
+
+  #hint{
+    font-size:clamp(1.05rem, 1.6vw, 1.3rem);
+    color:var(--muted);
+    margin-bottom:24px;
+  }
+
+  .answerBox{
+    display:none;
+    margin-top:24px;
+    background:rgba(255,216,90,.12);
+    border:2px solid var(--yellow);
+    border-radius:18px;
+    padding:22px;
+  }
+
+  .answerBox.show{display:block}
+
+  .answerTitle{
+    color:var(--yellow);
+    font-weight:900;
+    margin-bottom:10px;
+    font-size:1rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+
+  #answer{
+    font-size:clamp(1.5rem, 2.7vw, 2.4rem);
+    font-weight:800;
+    line-height:1.3;
+  }
+
+  .controls{
+    display:flex;
+    gap:14px;
+    margin-top:28px;
+    flex-wrap:wrap;
+  }
+
+  button{
+    border:none;
+    border-radius:14px;
+    padding:15px 22px;
+    font-size:1.1rem;
+    font-weight:900;
+    cursor:pointer;
+    transition:.18s ease;
+    box-shadow:0 6px 0 rgba(0,0,0,.16);
+  }
+
+  button:hover{transform:translateY(-2px)}
+  button:active{transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.18)}
+
+  .newBtn{
+    background:var(--orange);
+    color:white;
+  }
+
+  .answerBtn{
+    background:var(--yellow);
+    color:var(--navy);
+  }
+
+  .modeBtn{
+    background:transparent;
+    color:white;
+    border:2px solid rgba(255,255,255,.25);
+    box-shadow:none;
+  }
+
+  .modeBtn.active{
+    background:white;
+    color:var(--navy);
+    border-color:white;
+  }
+
+  .sidebar h2{
+    margin:0 0 14px;
+    color:var(--yellow);
+    font-size:1.35rem;
+  }
+
+  .sidebar ul{
+    margin:0;
+    padding-left:22px;
+  }
+
+  .sidebar li{
+    margin:9px 0;
+    font-size:1.05rem;
+    color:#edf3fb;
+  }
+
+  .verbBank{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .verb{
+    background:rgba(242,140,40,.14);
+    border:1px solid rgba(242,140,40,.35);
+    border-radius:12px;
+    padding:10px 12px;
+    font-weight:800;
+    text-align:center;
+  }
+
+  .footerTip{
+    margin-top:22px;
+    color:var(--muted);
+    font-size:.95rem;
+    line-height:1.45;
+  }
+
+  .mini{
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px solid rgba(255,255,255,.15);
+  }
+
+  .mini strong{
+    color:var(--yellow);
+  }
+
+  @media(max-width:850px){
+    main{grid-template-columns:1fr}
+    .app{min-height:auto}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">
+      <h1>Verbos como <span style="color:var(--orange)">GUSTAR</span></h1>
+      <p>Práctica oral y escrita · Servicio comunitario</p>
+    </div>
+    <div class="badge">Habla primero · Escribe después</div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="label">Tu reto</div>
+      <div id="prompt"></div>
+      <div id="hint"></div>
+
+      <div class="answerBox" id="answerBox">
+        <div class="answerTitle">Una respuesta posible</div>
+        <div id="answer"></div>
+      </div>
+
+      <div class="controls">
+        <button class="newBtn" onclick="newPrompt()">🎲 Nuevo prompt</button>
+        <button class="answerBtn" onclick="toggleAnswer()">👀 Mostrar respuesta</button>
+      </div>
+
+      <div class="controls" style="margin-top:16px">
+        <button id="oralBtn" class="modeBtn active" onclick="setMode('oral')">🗣️ Hablar</button>
+        <button id="writeBtn" class="modeBtn" onclick="setMode('write')">✍️ Escribir</button>
+        <button id="bothBtn" class="modeBtn" onclick="setMode('both')">🔁 Los dos</button>
+      </div>
+    </section>
+
+    <aside class="card sidebar">
+      <h2>Banco de verbos</h2>
+      <div class="verbBank">
+        <div class="verb">gustar</div>
+        <div class="verb">encantar</div>
+        <div class="verb">interesar</div>
+        <div class="verb">importar</div>
+        <div class="verb">molestar</div>
+        <div class="verb">fascinar</div>
+        <div class="verb">preocupar</div>
+        <div class="verb">quedar</div>
+      </div>
+
+      <div class="mini">
+        <h2>Vocabulario útil</h2>
+        <ul>
+          <li>hacer voluntariado</li>
+          <li>ayudar a los demás</li>
+          <li>recoger basura</li>
+          <li>donar ropa / comida</li>
+          <li>trabajar en un comedor social</li>
+          <li>visitar una residencia de ancianos</li>
+          <li>cuidar animales</li>
+          <li>recaudar fondos</li>
+          <li>participar en una colecta</li>
+          <li>mejorar la comunidad</li>
+        </ul>
+      </div>
+
+      <div class="footerTip">
+        <strong>Recordatorio:</strong> piensa en quién recibe la acción:
+        <em>me, te, le, nos, os, les</em>. Después decide si el verbo va en singular o plural.
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+const prompts = [
+  {
+    p:"A Marta ___ mucho ayudar en el comedor social.",
+    h:"Completa con un verbo como gustar.",
+    a:"A Marta le gusta mucho ayudar en el comedor social."
+  },
+  {
+    p:"A mis amigos y a mí ___ recoger basura en el parque.",
+    h:"Piensa en el pronombre y en singular/plural.",
+    a:"A mis amigos y a mí nos gusta recoger basura en el parque."
+  },
+  {
+    p:"A Carlos ___ los proyectos que ayudan a los animales.",
+    h:"Usa interesar.",
+    a:"A Carlos le interesan los proyectos que ayudan a los animales."
+  },
+  {
+    p:"A nosotros ___ mucho mejorar nuestra comunidad.",
+    h:"Usa importar.",
+    a:"A nosotros nos importa mucho mejorar nuestra comunidad."
+  },
+  {
+    p:"A ti ___ trabajar los sábados por la mañana.",
+    h:"Usa molestar.",
+    a:"A ti te molesta trabajar los sábados por la mañana."
+  },
+  {
+    p:"A los estudiantes ___ organizar una colecta de comida.",
+    h:"Usa encantar.",
+    a:"A los estudiantes les encanta organizar una colecta de comida."
+  },
+  {
+    p:"A mi profesora ___ los problemas de las personas sin hogar.",
+    h:"Usa preocupar.",
+    a:"A mi profesora le preocupan los problemas de las personas sin hogar."
+  },
+  {
+    p:"A Elena y a Pedro ___ dos horas libres para hacer voluntariado.",
+    h:"Usa quedar.",
+    a:"A Elena y a Pedro les quedan dos horas libres para hacer voluntariado."
+  },
+  {
+    p:"A mí ___ visitar una residencia de ancianos.",
+    h:"Elige entre gustar, encantar o interesar.",
+    a:"A mí me gusta visitar una residencia de ancianos."
+  },
+  {
+    p:"A vosotros ___ las actividades para recaudar fondos.",
+    h:"Usa fascinar.",
+    a:"A vosotros os fascinan las actividades para recaudar fondos."
+  },
+  {
+    p:"Transforma: «Yo disfruto ayudando a los demás».",
+    h:"Reescribe la idea usando gustar.",
+    a:"Me gusta ayudar a los demás."
+  },
+  {
+    p:"Transforma: «Los proyectos ecológicos son interesantes para Ana».",
+    h:"Usa interesar.",
+    a:"A Ana le interesan los proyectos ecológicos."
+  },
+  {
+    p:"Pregunta a tu compañero/a si le gusta hacer voluntariado.",
+    h:"Formula una pregunta completa.",
+    a:"¿Te gusta hacer voluntariado?"
+  },
+  {
+    p:"Pregunta a tu compañero/a qué tipo de servicio comunitario le interesa.",
+    h:"Usa interesar.",
+    a:"¿Qué tipo de servicio comunitario te interesa?"
+  },
+  {
+    p:"Responde: ¿Qué actividad de servicio comunitario te gusta más y por qué?",
+    h:"Da una respuesta de 2 frases.",
+    a:"Me gusta cuidar animales porque me encantan los perros y quiero ayudar a los refugios."
+  },
+  {
+    p:"Responde: ¿Qué problemas de tu comunidad te preocupan?",
+    h:"Usa preocupar + un sustantivo plural si puedes.",
+    a:"Me preocupan la pobreza y la falta de vivienda en mi comunidad."
+  },
+  {
+    p:"Completa: A mis compañeros ___ ayudar en eventos escolares.",
+    h:"Usa encantar.",
+    a:"A mis compañeros les encanta ayudar en eventos escolares."
+  },
+  {
+    p:"Completa: A nosotros no ___ las actividades desorganizadas.",
+    h:"Usa gustar.",
+    a:"A nosotros no nos gustan las actividades desorganizadas."
+  },
+  {
+    p:"Crea una frase con «donar ropa» y un verbo como gustar.",
+    h:"Puedes usar gustar, importar, interesar o encantar.",
+    a:"A mi familia le gusta donar ropa a organizaciones locales."
+  },
+  {
+    p:"Crea una frase con «recaudar fondos» y un verbo como gustar.",
+    h:"Incluye a quién le gusta/interesa/importa.",
+    a:"A los estudiantes les interesa recaudar fondos para el refugio de animales."
+  }
+];
+
+let current = 0;
+let mode = "oral";
+
+function render(){
+  document.getElementById("prompt").textContent = prompts[current].p;
+
+  let modeText = "";
+  if(mode === "oral") modeText = "🗣️ Responde en voz alta. ";
+  if(mode === "write") modeText = "✍️ Escribe una respuesta completa. ";
+  if(mode === "both") modeText = "🔁 Habla primero y después escribe. ";
+
+  document.getElementById("hint").textContent = modeText + prompts[current].h;
+  document.getElementById("answer").textContent = prompts[current].a;
+  document.getElementById("answerBox").classList.remove("show");
+  document.querySelector(".answerBtn").textContent = "👀 Mostrar respuesta";
+}
+
+function newPrompt(){
+  let next;
+  do{
+    next = Math.floor(Math.random() * prompts.length);
+  } while(next === current && prompts.length > 1);
+  current = next;
+  render();
+}
+
+function toggleAnswer(){
+  const box = document.getElementById("answerBox");
+  const btn = document.querySelector(".answerBtn");
+  box.classList.toggle("show");
+  btn.textContent = box.classList.contains("show") ? "🙈 Ocultar respuesta" : "👀 Mostrar respuesta";
+}
+
+function setMode(newMode){
+  mode = newMode;
+  ["oralBtn","writeBtn","bothBtn"].forEach(id => document.getElementById(id).classList.remove("active"));
+  if(mode === "oral") document.getElementById("oralBtn").classList.add("active");
+  if(mode === "write") document.getElementById("writeBtn").classList.add("active");
+  if(mode === "both") document.getElementById("bothBtn").classList.add("active");
+  render();
+}
+
+current = Math.floor(Math.random() * prompts.length);
+render();
+</script>
+</body>
+</html>
