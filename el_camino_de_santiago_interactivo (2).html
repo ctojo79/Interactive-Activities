@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Camino de Santiago | Exploración interactiva</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --navy:#0b1f3a; --navy2:#173a67; --yellow:#f2c94c; --orange:#e9822b;
+  --paper:#fffdf5; --green:#3f7f63; --text:#16263a; --muted:#627386;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:#f5f0e3}
+.hero{min-height:88vh;color:#fff;background:linear-gradient(rgba(7,26,50,.62),rgba(7,26,50,.79)),radial-gradient(circle at 75% 15%,rgba(242,201,76,.3),transparent 24%),linear-gradient(145deg,#315f82,#133556 60%,#0b1f3a);display:flex;flex-direction:column}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 5vw;border-bottom:1px solid rgba(255,255,255,.17);position:sticky;top:0;z-index:1000;background:rgba(11,31,58,.93);backdrop-filter:blur(10px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.15rem}
+.shell{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);color:var(--navy);font-size:22px}
+.navlinks{display:flex;gap:16px;flex-wrap:wrap}
+.navlinks a{color:white;text-decoration:none;font-weight:800;font-size:.92rem;opacity:.9}
+.navlinks a:hover{color:var(--yellow)}
+.heroInner{flex:1;width:min(1180px,90vw);margin:auto;padding:62px 0 70px;display:grid;grid-template-columns:1.15fr .85fr;gap:50px;align-items:center}
+.kicker{color:var(--yellow);text-transform:uppercase;letter-spacing:2px;font-weight:900;font-size:.9rem}
+h1{margin:12px 0 16px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(3.4rem,8vw,7.5rem);line-height:.88;letter-spacing:-2px}
+.hero h1 span{color:var(--yellow)}
+.hero p{font-size:clamp(1.08rem,1.8vw,1.35rem);line-height:1.65;color:#e8eef6;max-width:760px}
+.heroCard{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:26px;padding:28px;box-shadow:0 14px 38px rgba(0,0,0,.16)}
+.heroStat{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.stat{background:rgba(255,255,255,.08);padding:18px;border-radius:16px}
+.stat strong{display:block;color:var(--yellow);font-size:1.55rem;margin-bottom:4px}
+.ctaRow{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.btn{border:none;border-radius:999px;padding:13px 19px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block;font-size:1rem}
+.primary{background:var(--yellow);color:var(--navy)}
+.secondary{background:transparent;color:white;border:2px solid rgba(255,255,255,.45)}
+section{padding:80px 5vw}
+.inner{width:min(1180px,90vw);margin:auto}
+.sectionEyebrow{color:var(--orange);text-transform:uppercase;letter-spacing:1.6px;font-weight:900;font-size:.85rem}
+h2{font-family:Georgia,"Times New Roman",serif;color:var(--navy);font-size:clamp(2.3rem,5vw,4.3rem);margin:8px 0 20px;line-height:1}
+.lead{max-width:900px;color:#41566b;font-size:1.2rem;line-height:1.72}
+.overview{background:var(--paper)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:34px}
+.card{background:white;border-radius:20px;padding:24px;box-shadow:0 8px 28px rgba(21,45,73,.09);border-top:5px solid var(--yellow)}
+.card .icon{font-size:2rem;margin-bottom:10px}
+.card h3{color:var(--navy);font-size:1.2rem;margin:5px 0 9px}
+.card p{color:#536679;line-height:1.58;margin:0}
+.timeline{margin-top:42px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.timeItem{background:var(--navy);color:white;border-radius:18px;padding:20px}
+.timeItem .year{color:var(--yellow);font-weight:900;font-size:1.15rem}
+.timeItem p{color:#e7edf4;line-height:1.5;margin-bottom:0}
+.mapSection{background:var(--navy);color:white}
+.mapSection h2{color:white}.mapSection .lead{color:#d7e0eb}
+.mapLayout{display:grid;grid-template-columns:1.55fr .7fr;gap:22px;margin-top:30px}
+#map{height:590px;border-radius:22px;overflow:hidden;box-shadow:0 14px 38px rgba(0,0,0,.16);border:3px solid rgba(242,201,76,.65)}
+.mapPanel{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:22px}
+.mapPanel h3{color:var(--yellow);margin-top:0}.mapPanel p{color:#dce5ef;line-height:1.6}
+.stopList{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow:auto;padding-right:4px}
+.stopBtn{width:100%;text-align:left;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:white;border-radius:12px;padding:11px 13px;cursor:pointer;font-weight:800}
+.stopBtn:hover{background:rgba(242,201,76,.15);border-color:var(--yellow)}
+.mapHint{font-size:.9rem;color:#aebed0!important}
+.symbols{background:#f5f0e3}
+.symbolGrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:35px}
+.symbolCard{background:white;border-radius:24px;padding:32px;box-shadow:0 10px 30px rgba(24,42,62,.09)}
+.symbolVisual{width:100px;height:100px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:var(--yellow);font-size:55px;margin-bottom:20px}
+.symbolCard h3{font-family:Georgia,"Times New Roman",serif;font-size:2rem;color:var(--navy);margin:0 0 12px}
+.symbolCard p{line-height:1.7;color:#4f6376}
+.quiz{background:linear-gradient(145deg,#fffaf0,#f6ead3)}
+.quizBox{max-width:900px;margin:32px auto 0}
+.question{background:white;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 8px 24px rgba(26,43,64,.08)}
+.question h3{margin:0 0 15px;color:var(--navy);font-size:1.15rem}
+.option{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;border-radius:12px;border:2px solid #e5e8ec;background:#fafafa;color:var(--text);cursor:pointer;font-size:1rem}
+.option:hover{border-color:var(--yellow)}.option.correct{background:#e2f4e8;border-color:#5fa878}.option.incorrect{background:#fde5e1;border-color:#d96a58}
+.feedback{margin-top:10px;font-weight:800;min-height:1.2em}
+.quizControls{text-align:center;margin-top:26px}
+.quizBtn{border:none;border-radius:999px;padding:14px 22px;background:var(--navy);color:white;font-weight:900;font-size:1rem;cursor:pointer}
+#score{font-size:1.35rem;font-weight:900;color:var(--navy);margin-top:15px}
+.sources{background:#0b1f3a;color:#d8e2ee;padding:42px 5vw}.sources h3{color:var(--yellow);margin-top:0}.sources a{color:#fff}.sources p{line-height:1.6;font-size:.92rem}
+footer{background:#061426;color:#aebbd0;text-align:center;padding:18px;font-size:.9rem}
+
+.photoHero{width:100%;height:270px;object-fit:cover;border-radius:20px;margin-bottom:18px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.photoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+.photoCard{background:white;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(26,43,64,.10)}
+.photoCard img{width:100%;height:230px;object-fit:cover;display:block}
+.photoCard .caption{padding:13px 15px;color:#536679;font-size:.9rem;line-height:1.4}
+.symbolPhoto{width:100%;height:250px;object-fit:cover;border-radius:16px;margin-bottom:20px}
+.credit{font-size:.76rem!important;color:#718095!important;margin-top:8px!important}
+@media(max-width:900px){.heroInner,.mapLayout,.symbolGrid{grid-template-columns:1fr}.cards,.photoGrid{grid-template-columns:1fr}.timeline{grid-template-columns:1fr 1fr}.navlinks{display:none}}
+@media(max-width:560px){.timeline{grid-template-columns:1fr}section{padding:58px 5vw}}
+</style>
+</head>
+<body>
+<div class="hero" id="inicio">
+<nav>
+  <div class="brand"><div class="shell">☀</div> El Camino de Santiago</div>
+  <div class="navlinks">
+    <a href="#que-es">¿Qué es?</a>
+    <a href="#mapa">Mapa</a>
+    <a href="#simbolos">Símbolos</a>
+    <a href="#peregrinos">Peregrinos</a>
+    <a href="#preguntas">Comprensión</a>
+  </div>
+</nav>
+<div class="heroInner">
+  <div>
+    <div class="kicker">Una ruta • muchas historias • un destino</div>
+    <h1>El Camino de <span>Santiago</span></h1>
+    <p>Una red de rutas de peregrinación que atraviesa España y otros lugares de Europa y conduce a Santiago de Compostela, en Galicia. Para algunas personas es una experiencia religiosa; para otras, una aventura cultural, física o personal.</p>
+    <div class="ctaRow">
+      <a class="btn primary" href="#mapa">Explorar el mapa</a>
+      <a class="btn secondary" href="#preguntas">Ir a las preguntas</a>
+    </div>
+  </div>
+  <div class="heroCard">
+    <div class="heroStat">
+      <div class="stat"><strong>≈ 820</strong>descubrimiento tradicional de la tumba</div>
+      <div class="stat"><strong>Edad Media</strong>gran crecimiento de la peregrinación</div>
+      <div class="stat"><strong>Camino Francés</strong>la ruta histórica más conocida</div>
+      <div class="stat"><strong>Santiago</strong>destino final de las rutas</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<section class="overview" id="que-es">
+<div class="inner">
+  <div class="sectionEyebrow">01 · Una peregrinación viva</div>
+  <h2>¿Qué es el Camino?</h2>
+  <p class="lead">El Camino de Santiago no es una sola carretera. Es una <strong>red de rutas</strong> que llevan a Santiago de Compostela. Según la tradición cristiana, allí se encuentra la tumba del apóstol Santiago el Mayor. Desde la Edad Media, peregrinos de muchos lugares han viajado a Santiago a pie, a caballo y, en épocas más recientes, en bicicleta.</p>
+  <img class="photoHero" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Catedral_de_Santiago_de_Compostela_desde_la_Plaza_del_Obradoiro.jpg?width=1600" alt="Catedral de Santiago de Compostela desde la Plaza del Obradoiro">
+  <p class="credit">Catedral de Santiago de Compostela desde la Praza do Obradoiro · Wikimedia Commons</p>
+
+  <div class="cards">
+    <div class="card"><div class="icon">🥾</div><h3>La experiencia</h3><p>El peregrino avanza por etapas, normalmente caminando varios kilómetros cada día. Muchos llevan una credencial que van sellando a lo largo del recorrido.</p></div>
+    <div class="card"><div class="icon">🏘️</div><h3>Hospitalidad</h3><p>Los albergues, pueblos, monasterios y espacios de acogida forman parte de una tradición de hospitalidad que se desarrolló durante siglos.</p></div>
+    <div class="card"><div class="icon">🌍</div><h3>Más que religión</h3><p>Hoy la gente hace el Camino por motivos religiosos, culturales, deportivos, sociales o personales. El encuentro entre personas de distintos países es una parte importante de la experiencia.</p></div>
+  </div>
+
+  <div class="timeline">
+    <div class="timeItem"><div class="year">c. 820</div><p>Se sitúa el descubrimiento de una tumba que la tradición cristiana identifica con Santiago.</p></div>
+    <div class="timeItem"><div class="year">Siglo XII</div><p>El <em>Códice Calixtino</em> describe el Camino Francés y funciona casi como una guía medieval.</p></div>
+    <div class="timeItem"><div class="year">1993</div><p>El Camino Francés fue inscrito por la UNESCO como Patrimonio Mundial.</p></div>
+    <div class="timeItem"><div class="year">Hoy</div><p>El Camino sigue siendo una peregrinación religiosa y, a la vez, una experiencia cultural internacional.</p></div>
+  </div>
+</div>
+</section>
+
+<section class="mapSection" id="mapa">
+<div class="inner">
+  <div class="sectionEyebrow" style="color:var(--yellow)">02 · Camino Francés</div>
+  <h2>Explora la ruta</h2>
+  <p class="lead">Este mapa sigue algunos de los lugares más conocidos del <strong>Camino Francés</strong>, desde Saint-Jean-Pied-de-Port, al otro lado de los Pirineos, hasta Santiago de Compostela. Haz clic en los marcadores o en una ciudad de la lista.</p>
+  <div class="mapLayout">
+    <div id="map"></div>
+    <div class="mapPanel">
+      <h3>Paradas destacadas</h3>
+      <p>Selecciona una parada para localizarla en el mapa.</p>
+      <div class="stopList" id="stopList"></div>
+      <p class="mapHint">La línea muestra una aproximación visual de la ruta entre estas paradas principales, no cada sendero exacto del Camino.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="symbols" id="simbolos">
+<div class="inner">
+  <div class="sectionEyebrow">03 · Identidad y simbolismo</div>
+  <h2>Santiago y la vieira</h2>
+  <div class="symbolGrid">
+    <div class="symbolCard">
+      <div class="symbolVisual">⚔</div>
+      <h3>Santiago</h3>
+      <p>Santiago el Mayor fue uno de los apóstoles de Jesús. La tradición cristiana relacionó sus restos con Compostela después del hallazgo de una tumba en Galicia alrededor del año 820. A partir de ahí, Santiago se convirtió en uno de los grandes destinos de peregrinación de la Europa medieval, junto con Roma y Jerusalén.</p>
+      <p>Para los peregrinos cristianos, llegar a Santiago puede representar fe, penitencia, gratitud o búsqueda espiritual. Para otros caminantes actuales, Santiago funciona como un punto de llegada que simboliza esfuerzo, reflexión y transformación personal.</p>
+    </div>
+    <div class="symbolCard">
+      <img class="symbolPhoto" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Auf_dem_Jakobsweg_in_Santiago_-_die_Jakobsmuschel_als_Wegweiser_02.jpg?width=900" alt="Concha de vieira como señal del Camino de Santiago">
+      <h3>La concha de vieira</h3>
+      <p>La <strong>vieira</strong> es uno de los símbolos históricos más reconocibles del Camino. Durante siglos se asoció con los peregrinos que viajaban a Santiago, y hoy aparece en señales, monumentos, credenciales y mochilas.</p>
+      <p>Se le han atribuido varias interpretaciones simbólicas. Una de las más populares compara sus líneas con muchos caminos distintos que convergen en un solo destino: Santiago de Compostela. No existe una única explicación histórica aceptada para todos sus significados.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:24px;border-top-color:var(--orange)">
+    <img class="symbolPhoto" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Camino_arrow.jpg?width=1000" alt="Flecha amarilla que marca el Camino de Santiago">
+    <h3>🟨 La flecha amarilla</h3>
+    <p>Otro símbolo moderno del Camino es la flecha amarilla. La señalización actual se popularizó a partir de 1984 gracias al sacerdote Elías Valiña, que marcó el Camino Francés para ayudar a los peregrinos a seguir la ruta.</p>
+  </div>
+</div>
+</section>
+
+
+<section class="overview" id="peregrinos">
+<div class="inner">
+  <div class="sectionEyebrow">04 · La experiencia humana</div>
+  <h2>Los peregrinos</h2>
+  <p class="lead">Personas de muchas edades y nacionalidades recorren el Camino. Para algunos, el momento de llegar a la Praza do Obradoiro después de días o semanas caminando es especialmente emotivo.</p>
+  <div class="photoGrid">
+    <div class="photoCard"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Peregrinos_llegando_a_Salamanca.jpg?width=900" alt="Peregrinos caminando por el Camino de Santiago"><div class="caption">Peregrinos siguiendo el Camino. Las flechas amarillas ayudan a marcar la ruta.<div class="credit">Foto: teclasorg · CC BY-SA 2.0 · Wikimedia Commons</div></div></div>
+    <div class="photoCard"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Peregrinos_en_Santiago_01-23_(Praza_Obradoiro.JPG?width=900" alt="Peregrinas llegando a la Praza do Obradoiro"><div class="caption">Dos peregrinas celebran el final de su Camino frente a la Catedral.<div class="credit">Foto: P. Lameiro · CC BY-SA · Wikimedia Commons</div></div></div>
+    <div class="photoCard"><img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Peregrino_facendo_foto,_Catedral_de_Santiago_de_Compostela,_fachada_e_praza_do_Obradoiro.jpg?width=700" alt="Peregrino frente a la Catedral de Santiago"><div class="caption">Un peregrino en la Praza do Obradoiro, destino final del Camino.<div class="credit">CC0 · Wikimedia Commons</div></div></div>
+  </div>
+</div>
+</section>
+
+<section class="quiz" id="preguntas">
+<div class="inner">
+  <div class="sectionEyebrow">05 · Comprensión</div>
+  <h2>¿Qué aprendiste?</h2>
+  <p class="lead">Contesta las cinco preguntas. Haz clic en una respuesta para recibir retroalimentación.</p>
+  <div class="quizBox">
+
+    <div class="question" data-answer="b">
+      <h3>1. ¿Cuál es el destino de las rutas del Camino de Santiago?</h3>
+      <button class="option" data-choice="a">Madrid</button>
+      <button class="option" data-choice="b">Santiago de Compostela</button>
+      <button class="option" data-choice="c">Barcelona</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="question" data-answer="c">
+      <h3>2. Según la tradición cristiana, ¿por qué Santiago de Compostela se convirtió en lugar de peregrinación?</h3>
+      <button class="option" data-choice="a">Porque allí nació Santiago</button>
+      <button class="option" data-choice="b">Porque fue la capital medieval de España</button>
+      <button class="option" data-choice="c">Porque allí se identificó una tumba con el apóstol Santiago</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="question" data-answer="a">
+      <h3>3. ¿Qué representa la vieira en el Camino?</h3>
+      <button class="option" data-choice="a">Es un símbolo histórico asociado con los peregrinos</button>
+      <button class="option" data-choice="b">Es el símbolo oficial de Madrid</button>
+      <button class="option" data-choice="c">Indica que el Camino solo se puede hacer por mar</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="question" data-answer="b">
+      <h3>4. ¿Cuál de estas afirmaciones describe mejor el Camino hoy?</h3>
+      <button class="option" data-choice="a">Solo lo hacen personas por motivos religiosos</button>
+      <button class="option" data-choice="b">Las personas lo hacen por motivos religiosos, culturales, deportivos o personales</button>
+      <button class="option" data-choice="c">Ya no existe como ruta de peregrinación</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="question" data-answer="c">
+      <h3>5. ¿Qué función tiene la flecha amarilla?</h3>
+      <button class="option" data-choice="a">Marca los restaurantes más antiguos</button>
+      <button class="option" data-choice="b">Indica la frontera entre España y Francia</button>
+      <button class="option" data-choice="c">Ayuda a los peregrinos a seguir la ruta</button>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="quizControls">
+      <button class="quizBtn" onclick="showScore()">Ver mi resultado</button>
+      <div id="score"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="sources">
+<div class="inner">
+  <h3>Fuentes para seguir explorando</h3>
+  <p>Información histórica y cultural basada principalmente en el sitio oficial del Camino de Santiago de la Xunta de Galicia: <a href="https://www.caminodesantiago.gal/" target="_blank" rel="noopener">caminodesantiago.gal</a>. El mapa utiliza OpenStreetMap y Leaflet. Fotografías: Wikimedia Commons; las atribuciones aparecen junto a las imágenes.</p>
+</div>
+</section>
+
+<footer>Actividad educativa · El Camino de Santiago</footer>
+
+<script>
+const stops = [
+{name:"Saint-Jean-Pied-de-Port",coords:[43.1630,-1.2370],info:"Punto de partida muy conocido antes de cruzar los Pirineos."},
+{name:"Roncesvalles",coords:[43.0092,-1.3064],info:"Primera gran parada después del paso de los Pirineos."},
+{name:"Pamplona",coords:[42.8125,-1.6458],info:"Ciudad navarra famosa por su casco histórico."},
+{name:"Logroño",coords:[42.4627,-2.4449],info:"Capital de La Rioja y parada importante del Camino Francés."},
+{name:"Burgos",coords:[42.3439,-3.6969],info:"Ciudad castellana conocida por su catedral gótica."},
+{name:"León",coords:[42.5987,-5.5671],info:"Una de las grandes ciudades históricas del recorrido."},
+{name:"Astorga",coords:[42.4558,-6.0520],info:"Cruce histórico de caminos y ciudad de tradición peregrina."},
+{name:"Ponferrada",coords:[42.5466,-6.5962],info:"Conocida por su castillo y su relación con los templarios."},
+{name:"O Cebreiro",coords:[42.7087,-7.0432],info:"Entrada emblemática en Galicia, situada en la montaña."},
+{name:"Sarria",coords:[42.7815,-7.4143],info:"Punto de salida muy popular para quienes recorren los últimos kilómetros."},
+{name:"Portomarín",coords:[42.8062,-7.6166],info:"Localidad gallega a orillas del río Miño."},
+{name:"Palas de Rei",coords:[42.8738,-7.8682],info:"Etapa clásica del Camino en la provincia de Lugo."},
+{name:"Melide",coords:[42.9138,-8.0147],info:"Lugar conocido por su tradición gastronómica y ambiente peregrino."},
+{name:"Arzúa",coords:[42.9288,-8.1581],info:"Una de las últimas grandes paradas antes de Santiago."},
+{name:"Santiago de Compostela",coords:[42.8806,-8.5457],info:"Destino del Camino y ciudad de la Catedral de Santiago."}
+];
+
+const map = L.map('map',{scrollWheelZoom:false}).setView([42.65,-4.7],6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19,
+  attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const route = stops.map(s=>s.coords);
+L.polyline(route,{color:'#f2c94c',weight:6,opacity:.92}).addTo(map);
+
+const markers=[];
+stops.forEach((stop,index)=>{
+  const marker=L.circleMarker(stop.coords,{
+    radius:index===stops.length-1?10:7,
+    color:'#0b1f3a',
+    weight:2,
+    fillColor:index===stops.length-1?'#e9822b':'#f2c94c',
+    fillOpacity:1
+  }).addTo(map);
+  marker.bindPopup('<strong>'+stop.name+'</strong><br>'+stop.info);
+  markers.push(marker);
+
+  const btn=document.createElement('button');
+  btn.className='stopBtn';
+  btn.textContent=(index+1)+'. '+stop.name;
+  btn.onclick=()=>{
+    map.flyTo(stop.coords,9,{duration:1.2});
+    marker.openPopup();
+  };
+  document.getElementById('stopList').appendChild(btn);
+});
+map.fitBounds(route,{padding:[25,25]});
+
+const answered=new Map();
+document.querySelectorAll('.question').forEach((q,qIndex)=>{
+  const correct=q.dataset.answer;
+  q.querySelectorAll('.option').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      q.querySelectorAll('.option').forEach(b=>b.classList.remove('correct','incorrect'));
+      const choice=btn.dataset.choice;
+      const feedback=q.querySelector('.feedback');
+      if(choice===correct){
+        btn.classList.add('correct');
+        feedback.textContent='✓ ¡Correcto!';
+        feedback.style.color='#3f7f63';
+        answered.set(qIndex,true);
+      }else{
+        btn.classList.add('incorrect');
+        feedback.textContent='✗ Inténtalo otra vez.';
+        feedback.style.color='#b14c3d';
+        answered.set(qIndex,false);
+      }
+    });
+  });
+});
+
+function showScore(){
+  let score=0;
+  for(let i=0;i<5;i++){if(answered.get(i)===true)score++}
+  const box=document.getElementById('score');
+  box.textContent='Resultado: '+score+' / 5';
+  if(score===5)box.textContent+=' — ¡Excelente trabajo!';
+  else if(score>=3)box.textContent+=' — ¡Muy bien! Revisa las que faltan.';
+  else box.textContent+=' — Vuelve a explorar la página y prueba otra vez.';
+}
+</script>
+</body>
+</html>
